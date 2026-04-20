@@ -12,7 +12,31 @@
   const startButtonLabel = document.getElementById('startButtonLabel');
   const itemMessage = document.getElementById('itemMessage');
   const itemChoices = document.getElementById('itemChoices');
-
+window.addEventListener("mousewheel", function (e) {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          return false;
+        }
+      });
+      document.addEventListener(
+        "touchstart",
+        (e) => {
+          // Если используется более одного пальца
+          if (e.touches.length > 1) {
+            e.preventDefault(); // Отключаем действие по умолчанию
+          }
+        },
+        { passive: false },
+      ); // { passive: false } важно для предотвращения поведения по умолчанию
+      document.addEventListener(
+        "touchmove",
+        (e) => {
+          if (e.touches.length > 1) {
+            e.preventDefault(); // Отключаем зумирование двумя пальцами
+          }
+        },
+        { passive: false },
+      ); // { passive: false } важно для отмены действия по умолчанию
   function showOverlay(screenId) {
     overlay.classList.add('overlay--visible');
     screens.forEach((screen) => {
