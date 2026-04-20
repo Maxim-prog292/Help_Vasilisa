@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Побег Василисы и Ивана</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/ui.css" />
+    <link rel="stylesheet" href="css/game.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div
+        id="gameRoot"
+        class="game-root"
+        aria-label="Игра Побег Василисы и Ивана"
+      >
+        <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+
+        <div id="hud" class="hud hidden">
+          <div class="hud__left">
+            <div class="hud-chip">
+              <span class="hud-chip__label">Прогресс</span>
+              <div class="progress-bar">
+                <div id="progressFill" class="progress-bar__fill"></div>
+              </div>
+            </div>
+          </div>
+          <div class="hud__right">
+            <div class="hud-chip hud-chip--accent">
+              <span class="hud-chip__label">Разрыв</span>
+              <span id="gapValue" class="hud-chip__value">0 м</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="tapHint" class="tap-hint hidden">
+          Часто и легко касайтесь экрана. Не стучите по дисплею.
+        </div>
+
+        <div id="overlay" class="overlay overlay--visible">
+          <div class="overlay__shade"></div>
+
+          <section id="startScreen" class="screen screen--active">
+            <div class="start-layout">
+              <div class="character-card character-card--vasilisa">
+                <img
+                  id="startVasilisa"
+                  alt="Василиса"
+                  data-config-key="startVasilisa"
+                  data-placeholder="Василиса 9:16 PNG"
+                />
+              </div>
+
+              <div class="scroll-card">
+                <div class="scroll-card__image-wrap">
+                  <img
+                    id="scrollImage"
+                    alt="Свиток"
+                    data-config-key="scrollImage"
+                    data-placeholder="Свиток 16:9 PNG"
+                  />
+                  <div class="scroll-card__text-wrap">
+                    <p class="warn">
+                      Тапайте быстро, но легко. Не стучите по экрану.
+                    </p>
+                    <p id="startText" class="scroll-card__text">
+                      Привет добрые молодцы и девушки, помогите <br />мне с моим
+                      возлюбленным Иваном сбежать от царя батюшки.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="screen__actions screen__actions--bottom-center">
+              <button id="startButton" class="image-button" type="button">
+                <span id="startButtonLabel">Старт</span>
+              </button>
+            </div>
+          </section>
+
+          <section id="itemScreen" class="screen">
+            <div class="dialog-layout">
+              <div class="dialog-layout__side">
+                <img
+                  id="itemVasilisa"
+                  alt="Василиса"
+                  data-config-key="itemVasilisa"
+                  data-placeholder="Василиса 9:16 PNG"
+                />
+              </div>
+              <div class="dialog-layout__main">
+                <div class="dialog-panel">
+                  <img
+                    id="scrollImage_chinge_item"
+                    alt="Свиток"
+                    data-config-key="scrollImage"
+                    data-placeholder="Свиток 16:9 PNG"
+                  />
+                  <h2 class="dialog-panel__title">Василиса говорит:</h2>
+                  <p id="itemMessage" class="dialog-panel__text"></p>
+                </div>
+              </div>
+            </div>
+
+            <div id="itemChoices" class="item-choices"></div>
+          </section>
+
+          <section id="loseScreen" class="screen">
+            <div class="ending-layout">
+              <div class="ending-layout__art ending-layout__art--danger">
+                <div class="ending-figure">
+                  <img
+                    id="loseChaser"
+                    alt="Погоня"
+                    data-config-key="loseChaser"
+                    data-placeholder="Погоня PNG"
+                  />
+                </div>
+                <div class="ending-figure ending-figure--light">
+                  <img
+                    id="loseHeroes"
+                    alt="Иван и Василиса"
+                    data-config-key="loseHeroes"
+                    data-placeholder="Иван и Василиса PNG"
+                  />
+                </div>
+              </div>
+              <div class="dialog-panel dialog-panel--ending">
+                <img
+                  id="scrollImage--ending"
+                  alt="Свиток"
+                  data-config-key="scrollImage"
+                  data-placeholder="Свиток 16:9 PNG"
+                />
+                <h2 class="dialog-panel__title--ending">
+                  Погоня настигла беглецов
+                </h2>
+                <p class="dialog-panel__text--ending">
+                  «Не вели казнить, вели слово молвить»
+                </p>
+              </div>
+            </div>
+
+            <div class="screen__actions screen__actions--bottom-center">
+              <button id="retryButton" class="image-button" type="button">
+                <span>Попробовать снова</span>
+              </button>
+            </div>
+          </section>
+
+          <section id="winScreen" class="screen">
+            <div class="ending-layout">
+              <div class="ending-layout__art ending-layout__art--good">
+                <div class="ending-figure ending-figure--light">
+                  <img
+                    id="winVasilisa"
+                    alt="Василиса"
+                    data-config-key="winVasilisa"
+                    data-placeholder="Василиса PNG"
+                  />
+                </div>
+                <div class="ending-figure ending-figure--light">
+                  <img
+                    id="winIvan"
+                    alt="Иван"
+                    data-config-key="winIvan"
+                    data-placeholder="Иван PNG"
+                  />
+                </div>
+              </div>
+              <div class="dialog-panel dialog-panel--ending">
+                <img
+                  id="scrollImage--ending"
+                  alt="Свиток"
+                  data-config-key="scrollImage"
+                  data-placeholder="Свиток 16:9 PNG"
+                />
+                <h2 class="dialog-panel__title--ending">Побег удался</h2>
+                <p class="dialog-panel__text--ending">
+                  Спасибо за помощь. Мы с Иваном не забудем доброго дела и
+                  однажды обязательно отплатим тем же.
+                </p>
+              </div>
+            </div>
+
+            <div class="screen__actions screen__actions--bottom-center">
+              <button id="backToStartButton" class="image-button" type="button">
+                <span>Назад</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
