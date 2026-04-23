@@ -401,6 +401,7 @@ img[data-placeholder].is-placeholder {
   margin-top: 260px;
 } */
 .inMenu {
+  z-index: 5;
   display: block;
   position: absolute;
   top: 50px;
