@@ -66,6 +66,8 @@
       this.itemsUsed = 0;
       this.triggeredCheckpoints = new Set();
       this.activeObstacle = null;
+      this.dustParticles = [];
+      this.dustEmitAccumulator = 0;
       this.running = false;
       this.pausedForChoice = false;
       this.lastTime = 0;
@@ -152,6 +154,7 @@
 
       if (this.activeObstacle) {
         this.activeObstacle.timeLeft -= dt;
+        this.activeObstacle.age += dt;
         if (this.activeObstacle.timeLeft <= 0) {
           this.activeObstacle = null;
         } else {
@@ -168,6 +171,7 @@
       );
       this.heroAnimTime += heroSpeed * dt * 0.016;
       this.chaserAnimTime += chaserSpeed * dt * 0.014;
+      this.updateDust(dt, heroSpeed, chaserSpeed);
 
       this.config.checkpoints.forEach((checkpoint, index) => {
         if (
@@ -214,7 +218,7 @@
       const preferredLeftX =
         typeof this.config.itemSpawnScreenX === "number"
           ? this.config.itemSpawnScreenX
-          : 860;
+          : 160;
 
       const safeLeftX = Utils.clamp(
         preferredLeftX,
@@ -230,6 +234,7 @@
       this.activeObstacle = {
         ...item,
         timeLeft: item.duration,
+        age: 0,
         anchorX: this.getObstacleSpawnAnchor(item),
       };
       this.pausedForChoice = false;
@@ -279,6 +284,7 @@
         }
       }
 
+      this.drawDust();
       if (this.activeObstacle) this.drawObstacle(this.activeObstacle);
       this.drawCharacters();
 
@@ -452,11 +458,18 @@
       const x = this.wx(obstacle.anchorX);
       const ctx = this.ctx;
       const sprite = this.getAsset(`item:${obstacle.id}`);
+      const appear = this.getObstacleAppearProgress(obstacle);
 
       if (sprite) {
-        this.drawItemSprite(sprite, obstacle);
+        this.drawItemSprite(sprite, obstacle, appear);
         return;
       }
+
+      ctx.save();
+      ctx.globalAlpha = 0.96 * appear;
+      ctx.translate(x + 260, 780);
+      ctx.scale(0.82 + appear * 0.18, 0.82 + appear * 0.18);
+      ctx.translate(-(x + 260), -780);
 
       if (obstacle.obstacleType === "forest") {
         for (let i = 0; i < 10; i++) {
@@ -509,9 +522,17 @@
         ctx.closePath();
         ctx.fill();
       }
+
+      ctx.restore();
     }
 
-    drawItemSprite(image, obstacle) {
+    getObstacleAppearProgress(obstacle) {
+      const age = typeof obstacle.age === "number" ? obstacle.age : 0;
+      const t = Utils.clamp(age / 0.45, 0, 1);
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    drawItemSprite(image, obstacle, appear = 1) {
       const spriteLayout = this.config.spriteLayout || {};
       const legacyKey =
         obstacle.id === "brush"
@@ -531,16 +552,130 @@
       const offsetX = layout.offsetX || 160;
       const offsetY = layout.offsetY || 610;
 
+      const x = this.wx(obstacle.anchorX) + offsetX;
+      const y = offsetY;
+      const scale = 0.72 + appear * 0.28;
+      const lift = (1 - appear) * 42;
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+
       this.ctx.save();
-      this.ctx.globalAlpha = 0.96;
-      this.ctx.drawImage(
-        image,
-        this.wx(obstacle.anchorX) + offsetX,
-        offsetY,
-        width,
-        height,
-      );
+      this.ctx.globalAlpha = 0.96 * appear;
+      this.ctx.translate(centerX, centerY + lift);
+      this.ctx.scale(scale, scale);
+      this.ctx.drawImage(image, -width / 2, -height / 2, width, height);
       this.ctx.restore();
+    }
+
+    updateDust(dt, heroSpeed, chaserSpeed) {
+      this.dustEmitAccumulator += dt;
+      const emitEvery = 0.055;
+
+      while (this.dustEmitAccumulator >= emitEvery) {
+        this.dustEmitAccumulator -= emitEvery;
+
+        if (heroSpeed > 130) {
+          this.emitDust(
+            this.hero.x - 34,
+            this.hero.y + 148,
+            heroSpeed,
+            2,
+            0.85,
+          );
+          this.emitDust(
+            this.hero.x + 38,
+            this.hero.y + 146,
+            heroSpeed,
+            2,
+            0.75,
+          );
+        }
+
+        if (chaserSpeed > 120) {
+          this.emitDust(
+            this.chaser.x - 72,
+            this.chaser.y + 62,
+            chaserSpeed,
+            3,
+            1.0,
+          );
+          this.emitDust(
+            this.chaser.x + 10,
+            this.chaser.y + 58,
+            chaserSpeed,
+            3,
+            0.95,
+          );
+          this.emitDust(
+            this.chaser.x + 86,
+            this.chaser.y + 62,
+            chaserSpeed,
+            3,
+            0.9,
+          );
+        }
+      }
+
+      this.dustParticles = this.dustParticles.filter((particle) => {
+        particle.age += dt;
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.vy -= 6 * dt;
+        particle.size += particle.grow * dt;
+        return particle.age < particle.life;
+      });
+    }
+
+    emitDust(x, y, speed, count, power = 1) {
+      for (let i = 0; i < count; i++) {
+        const seed = Math.random();
+        this.dustParticles.push({
+          x: x - 16 - Math.random() * 42,
+          y: y + Math.random() * 12,
+          vx: -55 - Math.random() * (speed * 0.18),
+          vy: -10 - Math.random() * 22,
+          size: (10 + Math.random() * 18) * power,
+          grow: 18 + Math.random() * 22,
+          age: 0,
+          life: 0.42 + seed * 0.28,
+          alpha: (0.18 + seed * 0.18) * power,
+        });
+      }
+
+      if (this.dustParticles.length > 180) {
+        this.dustParticles.splice(0, this.dustParticles.length - 180);
+      }
+    }
+
+    drawDust() {
+      if (!this.dustParticles.length) return;
+
+      const ctx = this.ctx;
+      ctx.save();
+
+      this.dustParticles.forEach((particle) => {
+        const lifeProgress = Utils.clamp(particle.age / particle.life, 0, 1);
+        const alpha = particle.alpha * (1 - lifeProgress);
+        const x = this.wx(particle.x);
+
+        if (x < -120 || x > this.canvas.width + 120) return;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#d5b06f";
+        ctx.beginPath();
+        ctx.ellipse(
+          x,
+          particle.y,
+          particle.size * (1.35 + lifeProgress),
+          particle.size * 0.48,
+          -0.1,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      });
+
+      ctx.restore();
     }
 
     drawCharacters() {
