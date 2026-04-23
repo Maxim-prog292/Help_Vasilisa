@@ -203,12 +203,34 @@
       );
     }
 
+    getObstacleSpawnAnchor(item) {
+      const layout = (this.config.spriteLayout || {})[item.id] || {};
+      const obstacleWidth = layout.width || 520;
+      const offsetX = layout.offsetX || 0;
+
+      // Предмет должен появляться в видимой зоне экрана, а не от абсолютной
+      // позиции погони. Иначе при большом разрыве второй/третий предмет
+      // спавнится за пределами камеры и визуально кажется, что он не работает.
+      const preferredLeftX =
+        typeof this.config.itemSpawnScreenX === "number"
+          ? this.config.itemSpawnScreenX
+          : 860;
+
+      const safeLeftX = Utils.clamp(
+        preferredLeftX,
+        80,
+        this.canvas.width - obstacleWidth - 80,
+      );
+
+      return this.viewportX + safeLeftX - offsetX;
+    }
+
     applyItem(item) {
       this.itemsUsed += 1;
       this.activeObstacle = {
         ...item,
         timeLeft: item.duration,
-        anchorX: this.chaser.x + 460,
+        anchorX: this.getObstacleSpawnAnchor(item),
       };
       this.pausedForChoice = false;
       this.timeSinceTap = 0.35;
