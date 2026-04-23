@@ -400,3 +400,20 @@ img[data-placeholder].is-placeholder {
 #winIvan {
   margin-top: 260px;
 } */
+.inMenu {
+  display: block;
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  background: #d59e3c;
+  width: 140px;
+  height: 60px;
+  text-align: center;
+  padding-top: 14px;
+  font-size: 26px;
+  font-family: Nooks Script;
+  color: #fdf5d9;
+  text-decoration: none;
+  border-radius: 12px;
+  box-shadow: 0 0 0px 3px #5f4f33;
+}
